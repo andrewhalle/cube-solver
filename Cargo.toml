@@ -1,0 +1,9 @@
+[package]
+name = "cube-solver"
+version = "0.1.0"
+authors = ["Andrew Halle <ahalle@berkeley.edu>"]
+edition = "2018"
+
+[dependencies]
+ndarray = "0.12.1"
+lazy_static = "1.3.0"
