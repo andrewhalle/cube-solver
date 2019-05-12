@@ -1,60 +1,47 @@
-use lazy_static::lazy_static;
-use ndarray::prelude::*;
-// use nalgebra;
+use std::collections::HashMap;
 
-lazy_static! {
-    // put transformation matricies here
-    // read from file, store transformation matricies as bytes, create iterator on bits
-    // first two bytes give matrix dimension, remaining bytes are bits representing the
-    // 1's and 0's in row major order
-}
+use ndarray::{Array1, Array2};
 
-// XXX need tables for heuristics, use similar serialization as transformation matricies
-// function to generate them
+mod search;
+mod transformations;
 
-// implement cube as column vector, turns are matrix transformations
-pub struct Cube;
-
-pub struct Move {
-    face: Face,
-    turn: Turn,
-}
-
-pub enum Face {
-    U,
-    D,
-    F,
-    B,
-    L,
-    R,
-}
-
-pub enum Turn {
-    Clockwise,
-    CounterClockwise,
-    Double,
-}
-
-pub enum Color {
-    Blue,
-    Green,
-    Red,
-    Orange,
-    White,
-    Yellow,
+pub struct Cube {
+    transformations: HashMap<String, Array2<u8>>,
+    data: Array1<u8>,
 }
 
 impl Cube {
     pub fn new() -> Cube {
-        Cube
+        let mut v = Vec::new();
+        for color in 0..6 {
+            for _i in 0..4 {
+                v.push(color);
+            }
+        }
+
+        Cube {
+            transformations: transformations::cube2(),
+            data: Array1::from(v),
+        }
     }
 
-    pub fn apply(&mut self, moves: Vec<Move>) {}
+    pub fn twist(&mut self, moves: &str) {
+        let moves = String::from(moves);
 
-    pub fn scramble(&mut self) {}
+        for mv in moves.split_whitespace() {
+            self.data = self.transformations[mv].dot(&self.data);
+        }
+    }
+}
 
-    pub fn solve(&self) -> Vec<Move> {
-        // XXX IDA*
-        vec![]
+#[cfg(test)]
+mod tests {
+    use crate::Cube;
+
+    #[test]
+    fn it_works() {
+        let mut c = Cube::new();
+        c.twist("U2 U2");
+        println!("{:?}", c.data);
     }
 }
