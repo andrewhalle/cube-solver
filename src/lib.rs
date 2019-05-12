@@ -11,7 +11,11 @@ pub struct Cube {
 }
 
 impl Cube {
-    pub fn new() -> Cube {
+    pub fn new(dim: u32) -> Self {
+        if dim != 2 {
+            unimplemented!()
+        }
+
         let mut v = Vec::new();
         for color in 0..6 {
             for _i in 0..4 {
@@ -40,8 +44,8 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut c = Cube::new();
-        c.twist("U2 U2");
+        let mut c = Cube::new(2);
+        c.twist("D");
         println!("{:?}", c.data);
     }
 }
