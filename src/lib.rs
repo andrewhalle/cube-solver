@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn it_works() {
         let mut c = Cube::new(2);
-        c.twist("D");
+        c.twist("B U2 B R2 D F2 B' U' L2");
         println!("{:?}", c.data);
     }
 }
