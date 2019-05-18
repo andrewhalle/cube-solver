@@ -68,9 +68,9 @@ pub fn solve_exact() -> HashMap<String, String> {
             if !solution_table.contains_key(&state_string) {
                 solution_table.insert(state_string, neighbor.moves.clone());
                 queue.push_back(neighbor);
+                println!("{}", solution_table.len());
             }
         }
-        println!("{}", solution_table.len());
     }
 
     solution_table
