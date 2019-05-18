@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 
 use ndarray::{Array1, Array2};
 
@@ -36,12 +37,33 @@ impl<'a> Cube<'a> {
     }
 
     pub fn is_solved(&self) -> bool {
-        self.data
-            == Array1::from(vec![
-                0 as u8, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
-            ])
+        for face in self.data.to_vec().chunks(4) {
+            if face[0] != face[1] || face[0] != face[2] || face[0] != face[3] {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    pub fn state_string(&self) -> String {
+        base64::encode(&self.data.to_vec())
     }
 }
+
+impl<'a> Hash for Cube<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
+    }
+}
+
+impl<'a> PartialEq for Cube<'a> {
+    fn eq(&self, other: &Cube) -> bool {
+        self.data == other.data
+    }
+}
+
+impl<'a> Eq for Cube<'a> {}
 
 #[cfg(test)]
 mod tests {
