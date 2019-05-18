@@ -47,7 +47,24 @@ impl<'a> Cube<'a> {
     }
 
     pub fn state_string(&self) -> String {
-        base64::encode(&self.data.to_vec())
+        let mut color_table: HashMap<u8, u8> = HashMap::new();
+        let mut counter = 0;
+        base64::encode(
+            &self
+                .data
+                .to_vec()
+                .into_iter()
+                .map(|x| {
+                    if color_table.contains_key(&x) {
+                        *color_table.get(&x).unwrap()
+                    } else {
+                        color_table.insert(x, counter);
+                        counter += 1;
+                        *color_table.get(&x).unwrap()
+                    }
+                })
+                .collect::<Vec<u8>>()[..],
+        )
     }
 }
 
