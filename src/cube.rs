@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use ndarray::{Array1, Array2};
 
+#[derive(Clone)]
 pub struct Cube<'a> {
     transformations: &'a HashMap<String, Array2<u8>>,
     data: Array1<u8>,
@@ -32,6 +33,13 @@ impl<'a> Cube<'a> {
         for mv in moves.split_whitespace() {
             self.data = self.transformations[mv].dot(&self.data);
         }
+    }
+
+    pub fn is_solved(&self) -> bool {
+        self.data
+            == Array1::from(vec![
+                0 as u8, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,
+            ])
     }
 }
 
