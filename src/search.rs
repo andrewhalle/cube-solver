@@ -86,14 +86,7 @@ mod tests {
     fn it_works() {
         let t = transformations::cube2();
         let mut c = Cube::new(2, &t);
-        //c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B");
-        c.twist("B' R D2");
+        c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B");
         println!("{}", search::bfs(c).unwrap());
-    }
-
-    #[test]
-    fn test_solve_exact() {
-        let sol = search::solve_exact();
-        println!("{}", sol.len());
     }
 }
