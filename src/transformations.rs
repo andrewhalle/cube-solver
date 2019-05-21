@@ -93,8 +93,7 @@ pub fn cube2() -> HashMap<String, Array2<u8>> {
 }
 
 pub fn cube3() -> HashMap<String, Array2<u8>> {
-    let mut map = HashMap::new();
-
+    // fundamental moves
     let mut u = Array2::<u8>::zeros((54, 54));
     let row_order: Vec<u32> = vec![
         6, 3, 0, 7, 4, 1, 8, 5, 2, 18, 19, 20, 12, 13, 14, 15, 16, 17, 27, 28, 29, 21, 22, 23, 24,
@@ -104,6 +103,8 @@ pub fn cube3() -> HashMap<String, Array2<u8>> {
     for (i, row) in row_order.iter().enumerate() {
         u[[i, *row as usize]] = 1;
     }
+    let u2 = u.dot(&u);
+    let u_prime = u2.dot(&u);
 
     let mut x = Array2::<u8>::zeros((54, 54));
     let row_order: Vec<u32> = vec![
@@ -114,6 +115,8 @@ pub fn cube3() -> HashMap<String, Array2<u8>> {
     for (i, row) in row_order.iter().enumerate() {
         x[[i, *row as usize]] = 1;
     }
+    let x2 = x.dot(&x);
+    let x_prime = x2.dot(&x);
 
     let mut z = Array2::<u8>::zeros((54, 54));
     let row_order: Vec<u32> = vec![
@@ -124,4 +127,33 @@ pub fn cube3() -> HashMap<String, Array2<u8>> {
     for (i, row) in row_order.iter().enumerate() {
         z[[i, *row as usize]] = 1;
     }
+    let z2 = z.dot(&z);
+    let z_prime = z2.dot(&z);
+
+    let mut map = HashMap::new();
+    map.insert(String::from("R"), z_prime.dot(&u).dot(&z));
+    map.insert(String::from("R2"), z_prime.dot(&u2).dot(&z));
+    map.insert(String::from("R'"), z_prime.dot(&u_prime).dot(&z));
+
+    map.insert(String::from("L"), z.dot(&u).dot(&z_prime));
+    map.insert(String::from("L2"), z.dot(&u2).dot(&z_prime));
+    map.insert(String::from("L'"), z.dot(&u_prime).dot(&z_prime));
+
+    map.insert(String::from("F"), x.dot(&u).dot(&x_prime));
+    map.insert(String::from("F2"), x.dot(&u2).dot(&x_prime));
+    map.insert(String::from("F'"), x.dot(&u_prime).dot(&x_prime));
+
+    map.insert(String::from("B"), x_prime.dot(&u).dot(&x));
+    map.insert(String::from("B2"), x_prime.dot(&u2).dot(&x));
+    map.insert(String::from("B'"), x_prime.dot(&u_prime).dot(&x));
+
+    map.insert(String::from("D"), x2.dot(&u).dot(&x2));
+    map.insert(String::from("D2"), x2.dot(&u2).dot(&x2));
+    map.insert(String::from("D'"), x2.dot(&u_prime).dot(&x2));
+
+    map.insert(String::from("U"), u);
+    map.insert(String::from("U2"), u2);
+    map.insert(String::from("U'"), u_prime);
+
+    map
 }
