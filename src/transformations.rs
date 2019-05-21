@@ -131,22 +131,21 @@ pub fn cube3() -> HashMap<String, Array2<u8>> {
     let z_prime = z2.dot(&z);
 
     let mut map = HashMap::new();
-    // these are all reversed because matrix multiplication
-    map.insert(String::from("R"), z_prime.dot(&u).dot(&z));
-    map.insert(String::from("R2"), z_prime.dot(&u2).dot(&z));
-    map.insert(String::from("R'"), z_prime.dot(&u_prime).dot(&z));
+    map.insert(String::from("R"), z.dot(&u).dot(&z_prime));
+    map.insert(String::from("R2"), z.dot(&u2).dot(&z_prime));
+    map.insert(String::from("R'"), z.dot(&u_prime).dot(&z_prime));
 
-    map.insert(String::from("L"), z.dot(&u).dot(&z_prime));
-    map.insert(String::from("L2"), z.dot(&u2).dot(&z_prime));
-    map.insert(String::from("L'"), z.dot(&u_prime).dot(&z_prime));
+    map.insert(String::from("L"), z_prime.dot(&u).dot(&z));
+    map.insert(String::from("L2"), z_prime.dot(&u2).dot(&z));
+    map.insert(String::from("L'"), z_prime.dot(&u_prime).dot(&z));
 
-    map.insert(String::from("F"), x.dot(&u).dot(&x_prime));
-    map.insert(String::from("F2"), x.dot(&u2).dot(&x_prime));
-    map.insert(String::from("F'"), x.dot(&u_prime).dot(&x_prime));
+    map.insert(String::from("F"), x_prime.dot(&u).dot(&x));
+    map.insert(String::from("F2"), x_prime.dot(&u2).dot(&x));
+    map.insert(String::from("F'"), x_prime.dot(&u_prime).dot(&x));
 
-    map.insert(String::from("B"), x_prime.dot(&u).dot(&x));
-    map.insert(String::from("B2"), x_prime.dot(&u2).dot(&x));
-    map.insert(String::from("B'"), x_prime.dot(&u_prime).dot(&x));
+    map.insert(String::from("B"), x.dot(&u).dot(&x_prime));
+    map.insert(String::from("B2"), x.dot(&u2).dot(&x_prime));
+    map.insert(String::from("B'"), x.dot(&u_prime).dot(&x_prime));
 
     map.insert(String::from("D"), x2.dot(&u).dot(&x2));
     map.insert(String::from("D2"), x2.dot(&u2).dot(&x2));

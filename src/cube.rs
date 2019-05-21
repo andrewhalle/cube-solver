@@ -95,8 +95,7 @@ mod tests {
     fn test_cube3() {
         let t = transformations::cube3();
         let mut c = Cube::new(3, &t);
-        //c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
-        c.twist("B");
+        c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
         println!("{:?}", c.data);
     }
 }
