@@ -91,3 +91,37 @@ pub fn cube2() -> HashMap<String, Array2<u8>> {
 
     map
 }
+
+pub fn cube3() -> HashMap<String, Array2<u8>> {
+    let mut map = HashMap::new();
+
+    let mut u = Array2::<u8>::zeros((54, 54));
+    let row_order: Vec<u32> = vec![
+        6, 3, 0, 7, 4, 1, 8, 5, 2, 18, 19, 20, 12, 13, 14, 15, 16, 17, 27, 28, 29, 21, 22, 23, 24,
+        25, 26, 36, 37, 38, 30, 31, 32, 33, 34, 35, 9, 10, 11, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+        48, 49, 50, 51, 52, 53,
+    ];
+    for (i, row) in row_order.iter().enumerate() {
+        u[[i, *row as usize]] = 1;
+    }
+
+    let mut x = Array2::<u8>::zeros((54, 54));
+    let row_order: Vec<u32> = vec![
+        18, 19, 20, 21, 22, 23, 24, 25, 26, 11, 14, 17, 10, 13, 16, 9, 12, 15, 45, 46, 47, 48, 49,
+        50, 51, 52, 53, 33, 30, 27, 34, 31, 28, 35, 32, 29, 8, 7, 6, 5, 4, 3, 2, 1, 0, 44, 43, 42,
+        41, 40, 39, 38, 37, 36,
+    ];
+    for (i, row) in row_order.iter().enumerate() {
+        x[[i, *row as usize]] = 1;
+    }
+
+    let mut z = Array2::<u8>::zeros((54, 54));
+    let row_order: Vec<u32> = vec![
+        15, 12, 9, 16, 13, 10, 17, 14, 11, 51, 48, 45, 52, 49, 46, 53, 50, 47, 24, 21, 18, 25, 22,
+        19, 26, 23, 20, 6, 3, 0, 7, 4, 1, 8, 5, 2, 38, 41, 44, 37, 40, 43, 36, 39, 42, 33, 30, 27,
+        34, 31, 28, 35, 32, 29,
+    ];
+    for (i, row) in row_order.iter().enumerate() {
+        z[[i, *row as usize]] = 1;
+    }
+}

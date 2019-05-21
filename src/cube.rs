@@ -11,10 +11,6 @@ pub struct Cube<'a> {
 
 impl<'a> Cube<'a> {
     pub fn new(dim: u32, transformations: &'a HashMap<String, Array2<u8>>) -> Self {
-        if dim != 2 {
-            unimplemented!()
-        }
-
         let mut v = Vec::new();
         for color in 0..6 {
             for _i in 0..dim.pow(2) {
