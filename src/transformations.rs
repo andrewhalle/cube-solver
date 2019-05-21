@@ -131,6 +131,7 @@ pub fn cube3() -> HashMap<String, Array2<u8>> {
     let z_prime = z2.dot(&z);
 
     let mut map = HashMap::new();
+    // these are all reversed because matrix multiplication
     map.insert(String::from("R"), z_prime.dot(&u).dot(&z));
     map.insert(String::from("R2"), z_prime.dot(&u2).dot(&z));
     map.insert(String::from("R'"), z_prime.dot(&u_prime).dot(&z));
