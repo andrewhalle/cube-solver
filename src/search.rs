@@ -1,5 +1,4 @@
 use crate::cube::Cube;
-use crate::transformations;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 struct SearchNode<'a> {
@@ -52,9 +51,7 @@ pub fn bfs(start: Cube) -> Option<String> {
     None
 }
 
-pub fn solve_exact() -> HashMap<String, String> {
-    let t = transformations::cube2();
-    let c = Cube::new(2, &t);
+pub fn solve_exact<F: Fn(&Cube) -> String>(c: Cube, state_string: F) -> HashMap<String, String> {
     let mut queue = VecDeque::new();
     let mut solution_table = HashMap::new();
     queue.push_back(SearchNode {
@@ -64,7 +61,7 @@ pub fn solve_exact() -> HashMap<String, String> {
     while let Some(curr) = queue.pop_front() {
         let neighbors = curr.neighbors();
         for neighbor in neighbors.into_iter() {
-            let state_string = neighbor.state.state_string();
+            let state_string = state_string(&neighbor.state);
             if !solution_table.contains_key(&state_string) {
                 solution_table.insert(state_string, neighbor.moves.clone());
                 queue.push_back(neighbor);

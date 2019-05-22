@@ -7,11 +7,11 @@ use cube_solver::search;
 use cube_solver::transformations;
 
 fn main() {
-    let path = Path::new("tables/corners.data");
+    let path = Path::new("tables/edges1.data");
     let file = File::create(&path).unwrap();
 
     let t = transformations::cube3();
-    let c = Cube::corners(&t);
+    let c = Cube::edges1(&t);
     let sol = search::solve_exact(c, cube::corners_state);
     bincode::serialize_into(file, &sol).unwrap();
 }
