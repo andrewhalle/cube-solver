@@ -3,6 +3,41 @@ use std::hash::{Hash, Hasher};
 
 use ndarray::{Array1, Array2};
 
+#[derive(Debug)]
+enum Corner {
+    BlueOrangeWhite,
+    BlueOrangeYellow,
+    BlueRedWhite,
+    BlueRedYellow,
+    GreenOrangeWhite,
+    GreenOrangeYellow,
+    GreenRedWhite,
+    GreenRedYellow,
+}
+
+impl Corner {
+    fn from(v: [u8; 3]) -> Option<Corner> {
+        match v {
+            [0, 1, 4] => Some(Corner::BlueOrangeWhite),
+            [0, 1, 2] => Some(Corner::BlueRedWhite),
+            [0, 2, 3] => Some(Corner::BlueRedYellow),
+            [0, 3, 4] => Some(Corner::BlueOrangeYellow),
+            [1, 4, 5] => Some(Corner::GreenOrangeWhite),
+            [1, 2, 5] => Some(Corner::GreenRedWhite),
+            [2, 3, 5] => Some(Corner::GreenRedYellow),
+            [3, 4, 5] => Some(Corner::GreenOrangeYellow),
+            _ => None,
+        }
+    }
+}
+
+// which slice contains blue/green, up/down, right/left, or front/back
+enum CornerOrientation {
+    Up,
+    Right,
+    Front,
+}
+
 #[derive(Clone)]
 pub struct Cube<'a> {
     transformations: &'a HashMap<String, Array2<u8>>,
@@ -88,6 +123,48 @@ impl<'a> Cube<'a> {
                 .collect::<Vec<u8>>()[..],
         )
     }
+
+    fn corners_perm(&self) -> Vec<Corner> {
+        let mut result = Vec::new();
+
+        let mut c = vec![self.data[0], self.data[9], self.data[38]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        c = vec![self.data[2], self.data[29], self.data[36]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        c = vec![self.data[6], self.data[11], self.data[18]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        c = vec![self.data[8], self.data[20], self.data[27]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        c = vec![self.data[15], self.data[44], self.data[51]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        c = vec![self.data[35], self.data[42], self.data[53]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        c = vec![self.data[17], self.data[24], self.data[45]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        c = vec![self.data[26], self.data[33], self.data[47]];
+        c.sort();
+        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        result
+    }
+
+    fn corners_orient(&self) -> Vec<CornerOrientation> {
+        vec![]
+    }
 }
 
 impl<'a> Hash for Cube<'a> {
@@ -159,6 +236,22 @@ pub fn edges_state(c: &Cube) -> String {
     )
 }
 
+pub fn corners_index(c: &Cube) -> usize {
+    corners_perm_index(c) * corners_orient_index(c)
+}
+
+fn corners_perm_index(c: &Cube) -> usize {
+    let v = c.corners_perm();
+
+    0 // XXX
+}
+
+fn corners_orient_index(c: &Cube) -> usize {
+    let v = c.corners_orient();
+
+    0 // XXX
+}
+
 #[cfg(test)]
 mod tests {
     use crate::cube::Cube;
@@ -178,5 +271,13 @@ mod tests {
         let mut c = Cube::new(3, &t);
         c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
         println!("{:?}", c.data);
+    }
+
+    #[test]
+    fn test_corner() {
+        let t = transformations::cube3();
+        let mut c = Cube::new(3, &t);
+        c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
+        println!("{:?}", c.corners_perm());
     }
 }

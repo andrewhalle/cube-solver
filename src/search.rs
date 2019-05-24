@@ -6,6 +6,11 @@ struct SearchNode<'a> {
     moves: String,
 }
 
+struct SearchNodeSmall<'a> {
+    state: Cube<'a>,
+    distance: u8,
+}
+
 impl<'a> SearchNode<'a> {
     fn neighbors(&self) -> VecDeque<SearchNode<'a>> {
         let mut result = VecDeque::new();
@@ -20,6 +25,26 @@ impl<'a> SearchNode<'a> {
 
             let moves = format!("{} {}", self.moves, m);
             result.push_back(SearchNode { state, moves });
+        }
+
+        result
+    }
+}
+
+impl<'a> SearchNodeSmall<'a> {
+    fn neighbors(&self) -> VecDeque<SearchNodeSmall<'a>> {
+        let mut result = VecDeque::new();
+        let all_moves = vec![
+            "U", "U'", "U2", "F", "F'", "F2", "R", "R'", "R2", "D", "D'", "D2", "B", "B'", "B2",
+            "L", "L'", "L2",
+        ];
+
+        for m in all_moves.iter() {
+            let mut state = self.state.clone();
+            state.twist(m);
+
+            let distance = self.distance + 1;
+            result.push_back(SearchNodeSmall { state, distance });
         }
 
         result
@@ -66,6 +91,31 @@ pub fn solve_exact<F: Fn(&Cube) -> String>(c: Cube, state_string: F) -> HashMap<
                 solution_table.insert(state_string, neighbor.moves.clone());
                 queue.push_back(neighbor);
                 println!("{}", solution_table.len());
+            }
+        }
+    }
+
+    solution_table
+}
+
+pub fn gen_table<F: Fn(&Cube) -> usize>(c: Cube, result_size: usize, index_fn: F) -> Vec<u8> {
+    let mut solution_table = vec![0 as u8; result_size];
+    let mut queue = VecDeque::new();
+    let mut counter = 0 as usize;
+
+    queue.push_back(SearchNodeSmall {
+        state: c,
+        distance: 0,
+    });
+
+    while let Some(curr) = queue.pop_front() {
+        let neighbors = curr.neighbors();
+        for neighbor in neighbors.into_iter() {
+            if solution_table[index_fn(&neighbor.state)] == 0 {
+                solution_table[index_fn(&neighbor.state)] = curr.distance + 1;
+                queue.push_back(neighbor);
+                println!("{}", counter);
+                counter += 1;
             }
         }
     }
