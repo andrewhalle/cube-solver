@@ -29,6 +29,19 @@ impl Corner {
             _ => None,
         }
     }
+
+    fn index(&self) -> usize {
+        match self {
+            Corner::BlueOrangeWhite => 0,
+            Corner::BlueOrangeYellow => 1,
+            Corner::BlueRedWhite => 2,
+            Corner::BlueRedYellow => 3,
+            Corner::GreenOrangeWhite => 4,
+            Corner::GreenOrangeYellow => 5,
+            Corner::GreenRedWhite => 6,
+            Corner::GreenRedYellow => 7,
+        }
+    }
 }
 
 // which slice contains blue/green, up/down, right/left, or front/back
@@ -46,6 +59,14 @@ impl CornerOrientation {
             [_, 0, _] | [_, 5, _] => Some(CornerOrientation::Right),
             [_, _, 0] | [_, _, 5] => Some(CornerOrientation::Front),
             _ => None,
+        }
+    }
+
+    fn index(&self) -> usize {
+        match self {
+            CornerOrientation::Up => 0,
+            CornerOrientation::Right => 1,
+            CornerOrientation::Front => 2,
         }
     }
 }
@@ -253,20 +274,40 @@ pub fn edges_state(c: &Cube) -> String {
     )
 }
 
+fn fac(x: usize) -> usize {
+    if x == 0 {
+        1
+    } else {
+        x * fac(x - 1)
+    }
+}
+
 pub fn corners_index(c: &Cube) -> usize {
-    corners_perm_index(c) * corners_orient_index(c)
-}
+    let (perm, orient) = c.corners_data();
 
-fn corners_perm_index(c: &Cube) -> usize {
-    let v = c.corners_data();
+    let perm_index = {
+        let mut result = 0 as usize;
 
-    0 // XXX
-}
+        for i in 0..8 {
+            result += perm[i].index() * fac(8 - i - 1);
+        }
 
-fn corners_orient_index(c: &Cube) -> usize {
-    let v = c.corners_data();
+        result
+    };
 
-    0 // XXX
+    let orient_index = {
+        let mut result = 0 as usize;
+        let mut power = 0;
+
+        for i in 0..8 {
+            result += orient[i].index() * (3 as usize).pow(power);
+            power += 1;
+        }
+
+        result
+    };
+
+    perm_index * orient_index
 }
 
 #[cfg(test)]

@@ -11,7 +11,7 @@ fn main() {
     let file = File::create(&path).unwrap();
 
     let t = transformations::cube3();
-    let c = Cube::corners(&t);
-    let sol = search::solve_exact(c, cube::corners_state);
+    let c = Cube::new(3, &t);
+    let sol = search::gen_table(c, 88179840, cube::corners_index);
     bincode::serialize_into(file, &sol).unwrap();
 }
