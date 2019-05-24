@@ -1,11 +1,7 @@
-use std::collections::HashMap;
 use std::fs::File;
 use std::path::Path;
 
 use flate2::read::GzDecoder;
-
-use cube_solver::cube::Cube;
-use cube_solver::transformations;
 
 fn main() {
     let path = Path::new("tables/corners.data.gz");
@@ -13,11 +9,14 @@ fn main() {
 
     let d = GzDecoder::new(file);
 
-    let solution_table: HashMap<String, String> = bincode::deserialize_from(d).unwrap();
+    let solution_table: Vec<u8> = bincode::deserialize_from(d).unwrap();
 
-    let t = transformations::cube3();
-    let mut c = Cube::corners(&t);
-    c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B");
+    let mut count = 0;
+    for i in solution_table.into_iter() {
+        if i == 0 {
+            count += 1;
+        }
+    }
 
-    println!("{}", solution_table.get(&c.state_string()).unwrap());
+    println!("{}", count);
 }
