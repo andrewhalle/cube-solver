@@ -299,7 +299,8 @@ pub fn corners_index(c: &Cube) -> usize {
         let mut result = 0 as usize;
         let mut power = 0;
 
-        for i in 0..8 {
+        // intentionally skip one, last orientation is governed by other 7
+        for i in 0..7 {
             result += orient[i].index() * (3 as usize).pow(power);
             power += 1;
         }
@@ -307,7 +308,7 @@ pub fn corners_index(c: &Cube) -> usize {
         result
     };
 
-    perm_index * orient_index
+    (perm_index * 2187) + orient_index
 }
 
 #[cfg(test)]
@@ -335,8 +336,10 @@ mod tests {
     fn test_corner_data() {
         let t = transformations::cube3();
         let mut c = Cube::new(3, &t);
-        c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
+        //c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
+        c.twist("U");
         let data = c.corners_data();
         println!("{:?}, {:?}", data.0, data.1);
+        println!("{}", crate::cube::corners_index(&c));
     }
 }
