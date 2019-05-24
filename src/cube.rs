@@ -32,10 +32,22 @@ impl Corner {
 }
 
 // which slice contains blue/green, up/down, right/left, or front/back
+#[derive(Debug)]
 enum CornerOrientation {
     Up,
     Right,
     Front,
+}
+
+impl CornerOrientation {
+    fn from(v: [u8; 3]) -> Option<CornerOrientation> {
+        match v {
+            [0, _, _] | [5, _, _] => Some(CornerOrientation::Up),
+            [_, 0, _] | [_, 5, _] => Some(CornerOrientation::Right),
+            [_, _, 0] | [_, _, 5] => Some(CornerOrientation::Front),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -124,46 +136,51 @@ impl<'a> Cube<'a> {
         )
     }
 
-    fn corners_perm(&self) -> Vec<Corner> {
-        let mut result = Vec::new();
+    fn corners_data(&self) -> (Vec<Corner>, Vec<CornerOrientation>) {
+        let mut perm = Vec::new();
+        let mut orient = Vec::new();
 
         let mut c = vec![self.data[0], self.data[9], self.data[38]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
         c = vec![self.data[2], self.data[29], self.data[36]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
         c = vec![self.data[6], self.data[11], self.data[18]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
-        c = vec![self.data[8], self.data[20], self.data[27]];
+        c = vec![self.data[8], self.data[27], self.data[20]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
-        c = vec![self.data[15], self.data[44], self.data[51]];
+        c = vec![self.data[51], self.data[15], self.data[44]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
-        c = vec![self.data[35], self.data[42], self.data[53]];
+        c = vec![self.data[53], self.data[35], self.data[42]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
-        c = vec![self.data[17], self.data[24], self.data[45]];
+        c = vec![self.data[45], self.data[17], self.data[24]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
-        c = vec![self.data[26], self.data[33], self.data[47]];
+        c = vec![self.data[47], self.data[33], self.data[26]];
+        orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
-        result.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+        perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
 
-        result
-    }
-
-    fn corners_orient(&self) -> Vec<CornerOrientation> {
-        vec![]
+        (perm, orient)
     }
 }
 
@@ -241,13 +258,13 @@ pub fn corners_index(c: &Cube) -> usize {
 }
 
 fn corners_perm_index(c: &Cube) -> usize {
-    let v = c.corners_perm();
+    let v = c.corners_data();
 
     0 // XXX
 }
 
 fn corners_orient_index(c: &Cube) -> usize {
-    let v = c.corners_orient();
+    let v = c.corners_data();
 
     0 // XXX
 }
@@ -274,10 +291,11 @@ mod tests {
     }
 
     #[test]
-    fn test_corner() {
+    fn test_corner_data() {
         let t = transformations::cube3();
         let mut c = Cube::new(3, &t);
         c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
-        println!("{:?}", c.corners_perm());
+        let data = c.corners_data();
+        println!("{:?}, {:?}", data.0, data.1);
     }
 }
