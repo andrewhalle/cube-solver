@@ -12,6 +12,12 @@ fn main() {
 
     let t = transformations::cube3();
     let c = Cube::new(3, &t);
+
+    // generate the corners heuristic table, have to reset solved
+    // to 0, since it gets set to 2 during search, because detecting
+    // if we've seen a node is if it's entry in the table is 0
     let sol = search::gen_table(c, 88179840, cube::corners_index);
+    sol[0] = 0;
+
     bincode::serialize_into(file, &sol).unwrap();
 }
