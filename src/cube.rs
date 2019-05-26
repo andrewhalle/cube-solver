@@ -1,7 +1,14 @@
 use std::collections::HashMap;
+use std::fs::File;
 use std::hash::{Hash, Hasher};
+use std::path::Path;
 
+use lazy_static::lazy_static;
 use ndarray::{Array1, Array2};
+
+lazy_static! {
+    static ref CORNER_PERMUTATIONS: HashMap<String, usize> = all_corner_permutations();
+}
 
 #[derive(Debug)]
 enum Corner {
@@ -42,6 +49,15 @@ impl Corner {
             Corner::GreenRedYellow => 7,
         }
     }
+}
+
+fn all_corner_permutations() -> HashMap<String, usize> {
+    let path = Path::new("tables/corner_permutations.json");
+    let file = File::open(&path).unwrap();
+
+    let perms: HashMap<String, usize> = serde_json::from_reader(&file).unwrap();
+
+    perms
 }
 
 // which slice contains blue/green, up/down, right/left, or front/back
@@ -274,35 +290,24 @@ pub fn edges_state(c: &Cube) -> String {
     )
 }
 
-fn fac(x: usize) -> usize {
-    if x == 0 {
-        1
-    } else {
-        x * fac(x - 1)
-    }
+fn perm_as_string(perm: &[Corner]) -> String {
+    perm.iter()
+        .map(|x| x.index().to_string())
+        .collect::<Vec<String>>()
+        .join("")
 }
 
 pub fn corners_index(c: &Cube) -> usize {
     let (perm, orient) = c.corners_data();
 
-    let perm_index = {
-        let mut result = 0 as usize;
-
-        for i in 0..8 {
-            result += perm[i].index() * fac(8 - i - 1);
-        }
-
-        result
-    };
+    let perm_index = CORNER_PERMUTATIONS.get(&perm_as_string(&perm)).unwrap();
 
     let orient_index = {
         let mut result = 0 as usize;
-        let mut power = 0;
 
         // intentionally skip one, last orientation is governed by other 7
         for i in 0..7 {
-            result += orient[i].index() * (3 as usize).pow(power);
-            power += 1;
+            result += orient[i].index() * (3 as usize).pow(i as u32);
         }
 
         result
@@ -337,7 +342,7 @@ mod tests {
         let t = transformations::cube3();
         let mut c = Cube::new(3, &t);
         //c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
-        c.twist("U");
+        //c.twist("U L");
         let data = c.corners_data();
         println!("{:?}, {:?}", data.0, data.1);
         println!("{}", crate::cube::corners_index(&c));

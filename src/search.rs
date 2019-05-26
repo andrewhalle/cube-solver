@@ -114,7 +114,10 @@ pub fn gen_table<F: Fn(&Cube) -> usize>(c: Cube, result_size: usize, index_fn: F
             if solution_table[index_fn(&neighbor.state)] == 0 {
                 solution_table[index_fn(&neighbor.state)] = curr.distance + 1;
                 queue.push_back(neighbor);
-                println!("{}", counter);
+                println!(
+                    "states visited: {}, distance from solved: {}",
+                    counter, curr.distance
+                );
                 counter += 1;
             }
         }

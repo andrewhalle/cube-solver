@@ -10,6 +10,10 @@ fn main() {
     let d = GzDecoder::new(file);
 
     let solution_table: Vec<u8> = bincode::deserialize_from(d).unwrap();
+    solution_table[0] = 0;
 
-    println!("{}", solution_table[0]);
+    let path = Path::new("tables/corners.data");
+    let file = File::open(&path).unwrap();
+
+    bincode::serialize_to(&file);
 }
