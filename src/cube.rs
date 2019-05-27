@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
@@ -8,6 +8,8 @@ use ndarray::{Array1, Array2};
 
 lazy_static! {
     static ref CORNER_PERMUTATIONS: HashMap<String, usize> = all_corner_permutations();
+    static ref EDGES1_PERMUTATIONS: HashMap<String, usize> = all_edges1_permutations();
+    static ref EDGES1_MASK: HashSet<Edge> = edges1_mask();
 }
 
 #[derive(Debug)]
@@ -61,6 +63,28 @@ fn all_corner_permutations() -> HashMap<String, usize> {
     perms
 }
 
+fn all_edges1_permutations() -> HashMap<String, usize> {
+    let path = Path::new("tables/edges1_permutations.json");
+    let file = File::open(&path).unwrap();
+
+    let perms: HashMap<String, usize> = serde_json::from_reader(&file).unwrap();
+
+    perms
+}
+
+fn edges1_mask() -> HashSet<Edge> {
+    let mut mask = HashSet::new();
+
+    mask.insert(Edge::RedWhite);
+    mask.insert(Edge::RedYellow);
+    mask.insert(Edge::GreenOrange);
+    mask.insert(Edge::GreenWhite);
+    mask.insert(Edge::GreenYellow);
+    mask.insert(Edge::GreenRed);
+
+    mask
+}
+
 // which slice contains blue/green, up/down, right/left, or front/back
 #[derive(Debug)]
 enum CornerOrientation {
@@ -89,6 +113,7 @@ impl CornerOrientation {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Hash)]
 enum Edge {
     BlueOrange,
     BlueWhite,
@@ -102,45 +127,121 @@ enum Edge {
     GreenWhite,
     GreenYellow,
     GreenRed,
+    Ignored, // special type for ignoring pieces for generating tables
 }
 
 impl Edge {
-    fn from(v: [u8; 2]) -> Edge {
+    // clean this up with a macro
+    fn from(v: [u8; 2], mask: &HashSet<Edge>) -> Edge {
         match v {
-            [0, 4] => BlueOrange,
-            [0, 1] => BlueWhite,
-            [0, 3] => BlueYellow,
-            [0, 2] => BlueRed,
-            [1, 4] => OrangeWhite,
-            [3, 4] => OrangeYellow,
-            [1, 2] => RedWhite,
-            [2, 3] => RedYellow,
-            [4, 5] => GreenOrange,
-            [1, 5] => GreenWhite,
-            [3, 5] => GreenYellow,
-            [2, 5] => GreenRed,
+            [0, 4] => {
+                if mask.contains(&Edge::BlueOrange) {
+                    Edge::Ignored
+                } else {
+                    Edge::BlueOrange
+                }
+            }
+            [0, 1] => {
+                if mask.contains(&Edge::BlueWhite) {
+                    Edge::Ignored
+                } else {
+                    Edge::BlueWhite
+                }
+            }
+            [0, 3] => {
+                if mask.contains(&Edge::BlueYellow) {
+                    Edge::Ignored
+                } else {
+                    Edge::BlueYellow
+                }
+            }
+            [0, 2] => {
+                if mask.contains(&Edge::BlueRed) {
+                    Edge::Ignored
+                } else {
+                    Edge::BlueRed
+                }
+            }
+            [1, 4] => {
+                if mask.contains(&Edge::OrangeWhite) {
+                    Edge::Ignored
+                } else {
+                    Edge::OrangeWhite
+                }
+            }
+            [3, 4] => {
+                if mask.contains(&Edge::OrangeYellow) {
+                    Edge::Ignored
+                } else {
+                    Edge::OrangeYellow
+                }
+            }
+            [1, 2] => {
+                if mask.contains(&Edge::RedWhite) {
+                    Edge::Ignored
+                } else {
+                    Edge::RedWhite
+                }
+            }
+            [2, 3] => {
+                if mask.contains(&Edge::RedYellow) {
+                    Edge::Ignored
+                } else {
+                    Edge::RedYellow
+                }
+            }
+            [4, 5] => {
+                if mask.contains(&Edge::GreenOrange) {
+                    Edge::Ignored
+                } else {
+                    Edge::GreenOrange
+                }
+            }
+            [1, 5] => {
+                if mask.contains(&Edge::GreenWhite) {
+                    Edge::Ignored
+                } else {
+                    Edge::GreenWhite
+                }
+            }
+            [3, 5] => {
+                if mask.contains(&Edge::GreenYellow) {
+                    Edge::Ignored
+                } else {
+                    Edge::GreenYellow
+                }
+            }
+            [2, 5] => {
+                if mask.contains(&Edge::GreenRed) {
+                    Edge::Ignored
+                } else {
+                    Edge::GreenRed
+                }
+            }
             _ => unreachable!(),
         }
     }
 
     fn index(&self) -> usize {
         match self {
-            BlueOrange => 0,
-            BlueWhite => 1,
-            BlueYellow => 2,
-            BlueRed => 3,
-            OrangeWhite => 4,
-            OrangeYellow => 5,
-            RedWhite => 6,
-            RedYellow => 7,
-            GreenOrange => 8,
-            GreenWhite => 9,
-            GreenYellow => 10,
-            GreenRed => 11,
+            Edge::BlueOrange => 0,
+            Edge::BlueWhite => 1,
+            Edge::BlueYellow => 2,
+            Edge::BlueRed => 3,
+            Edge::OrangeWhite => 4,
+            Edge::OrangeYellow => 5,
+            Edge::RedWhite => 6,
+            Edge::RedYellow => 7,
+            Edge::GreenOrange => 8,
+            Edge::GreenWhite => 9,
+            Edge::GreenYellow => 10,
+            Edge::GreenRed => 11,
+            Edge::Ignored => 12,
         }
     }
 }
 
+#[derive(Debug)]
 enum EdgeOrientation {
     Good,
     Bad,
@@ -152,6 +253,7 @@ impl EdgeOrientation {
             [0, 4]
             | [0, 1]
             | [0, 3]
+            | [0, 2]
             | [4, 1]
             | [4, 3]
             | [2, 1]
@@ -159,10 +261,11 @@ impl EdgeOrientation {
             | [5, 4]
             | [5, 1]
             | [5, 3]
-            | [5, 2] => Good,
+            | [5, 2] => EdgeOrientation::Good,
             [4, 0]
             | [1, 0]
             | [3, 0]
+            | [2, 0]
             | [1, 4]
             | [3, 4]
             | [1, 2]
@@ -170,13 +273,16 @@ impl EdgeOrientation {
             | [4, 5]
             | [1, 5]
             | [3, 5]
-            | [2, 5] => Bad,
+            | [2, 5] => EdgeOrientation::Bad,
             _ => unreachable!(),
         }
     }
 
     fn index(&self) -> usize {
-        // XXX
+        match self {
+            EdgeOrientation::Good => 0,
+            EdgeOrientation::Bad => 1,
+        }
     }
 }
 
@@ -266,6 +372,7 @@ impl<'a> Cube<'a> {
         )
     }
 
+    // XXX clean this up with a macro
     fn corners_data(&self) -> (Vec<Corner>, Vec<CornerOrientation>) {
         let mut perm = Vec::new();
         let mut orient = Vec::new();
@@ -309,6 +416,74 @@ impl<'a> Cube<'a> {
         orient.push(CornerOrientation::from([c[0], c[1], c[2]]).unwrap());
         c.sort();
         perm.push(Corner::from([c[0], c[1], c[2]]).unwrap());
+
+        (perm, orient)
+    }
+
+    // XXX clean this up with a macro
+    fn edges_data(&self, mask: &HashSet<Edge>) -> (Vec<Edge>, Vec<EdgeOrientation>) {
+        let mut perm = Vec::new();
+        let mut orient = Vec::new();
+
+        let mut c = vec![self.data[1], self.data[37]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[3], self.data[10]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[5], self.data[28]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[7], self.data[19]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[41], self.data[12]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[39], self.data[32]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[21], self.data[14]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[23], self.data[30]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[52], self.data[43]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[48], self.data[16]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[50], self.data[34]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
+
+        let mut c = vec![self.data[46], self.data[25]];
+        orient.push(EdgeOrientation::from([c[0], c[1]]));
+        c.sort();
+        perm.push(Edge::from([c[0], c[1]], &mask));
 
         (perm, orient)
     }
@@ -383,17 +558,26 @@ pub fn edges_state(c: &Cube) -> String {
     )
 }
 
-fn perm_as_string(perm: &[Corner]) -> String {
+fn corner_perm_as_string(perm: &[Corner]) -> String {
     perm.iter()
         .map(|x| x.index().to_string())
         .collect::<Vec<String>>()
-        .join("")
+        .join(",")
+}
+
+fn edges_perm_as_string(perm: &[Edge]) -> String {
+    perm.iter()
+        .map(|x| x.index().to_string())
+        .collect::<Vec<String>>()
+        .join(",")
 }
 
 pub fn corners_index(c: &Cube) -> usize {
     let (perm, orient) = c.corners_data();
 
-    let perm_index = CORNER_PERMUTATIONS.get(&perm_as_string(&perm)).unwrap();
+    let perm_index = CORNER_PERMUTATIONS
+        .get(&corner_perm_as_string(&perm))
+        .unwrap();
 
     let orient_index = {
         let mut result = 0 as usize;
@@ -409,9 +593,36 @@ pub fn corners_index(c: &Cube) -> usize {
     (perm_index * 2187) + orient_index
 }
 
+pub fn edges1_index(c: &Cube) -> usize {
+    let (perm, orient) = c.edges_data(&EDGES1_MASK);
+
+    let perm_index = EDGES1_PERMUTATIONS
+        .get(&edges_perm_as_string(&perm))
+        .unwrap();
+
+    let orient_index = {
+        let mut result = 0 as usize;
+
+        let mut power = 0;
+        // only consider orientations of non-ignored
+        for (i, o) in orient.iter().enumerate() {
+            if perm[i] != Edge::Ignored {
+                result += o.index() * (2 as usize).pow(power);
+                power += 1;
+            }
+        }
+
+        result
+    };
+
+    (perm_index * 64) + orient_index
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::cube::Cube;
+    use std::collections::HashSet;
+
+    use crate::cube::{Cube, Edge};
     use crate::transformations;
 
     #[test]
@@ -431,7 +642,7 @@ mod tests {
     }
 
     #[test]
-    fn test_corner_data() {
+    fn test_corners_data() {
         let t = transformations::cube3();
         let mut c = Cube::new(3, &t);
         //c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
@@ -439,5 +650,21 @@ mod tests {
         let data = c.corners_data();
         println!("{:?}, {:?}", data.0, data.1);
         println!("{}", crate::cube::corners_index(&c));
+    }
+
+    #[test]
+    fn test_edges_data() {
+        let t = transformations::cube3();
+        let mut c = Cube::new(3, &t);
+        //c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
+        c.twist("D");
+
+        let mut mask = HashSet::new();
+        mask.insert(Edge::RedWhite);
+        mask.insert(Edge::BlueYellow);
+
+        let data = c.edges_data(&mask);
+        println!("{:?}, {:?}", data.0, data.1);
+        println!("{}", crate::cube::edges1_index(&c));
     }
 }
