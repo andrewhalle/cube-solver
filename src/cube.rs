@@ -9,7 +9,9 @@ use ndarray::{Array1, Array2};
 lazy_static! {
     static ref CORNER_PERMUTATIONS: HashMap<String, usize> = all_corner_permutations();
     static ref EDGES1_PERMUTATIONS: HashMap<String, usize> = all_edges1_permutations();
+    static ref EDGES2_PERMUTATIONS: HashMap<String, usize> = all_edges2_permutations();
     static ref EDGES1_MASK: HashSet<Edge> = edges1_mask();
+    static ref EDGES2_MASK: HashSet<Edge> = edges2_mask();
 }
 
 #[derive(Debug)]
@@ -72,6 +74,15 @@ fn all_edges1_permutations() -> HashMap<String, usize> {
     perms
 }
 
+fn all_edges2_permutations() -> HashMap<String, usize> {
+    let path = Path::new("tables/edges2_permutations.json");
+    let file = File::open(&path).unwrap();
+
+    let perms: HashMap<String, usize> = serde_json::from_reader(&file).unwrap();
+
+    perms
+}
+
 fn edges1_mask() -> HashSet<Edge> {
     let mut mask = HashSet::new();
 
@@ -81,6 +92,19 @@ fn edges1_mask() -> HashSet<Edge> {
     mask.insert(Edge::GreenWhite);
     mask.insert(Edge::GreenYellow);
     mask.insert(Edge::GreenRed);
+
+    mask
+}
+
+fn edges2_mask() -> HashSet<Edge> {
+    let mut mask = HashSet::new();
+
+    mask.insert(Edge::BlueOrange);
+    mask.insert(Edge::BlueWhite);
+    mask.insert(Edge::BlueYellow);
+    mask.insert(Edge::BlueRed);
+    mask.insert(Edge::OrangeWhite);
+    mask.insert(Edge::OrangeYellow);
 
     mask
 }
@@ -111,6 +135,11 @@ impl CornerOrientation {
             CornerOrientation::Front => 2,
         }
     }
+}
+
+enum EdgeSet {
+    Edges1,
+    Edges2,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -593,12 +622,22 @@ pub fn corners_index(c: &Cube) -> usize {
     (perm_index * 2187) + orient_index
 }
 
-pub fn edges1_index(c: &Cube) -> usize {
-    let (perm, orient) = c.edges_data(&EDGES1_MASK);
+fn edges_index(c: &Cube, set: EdgeSet) -> usize {
+    let (perm, orient) = match &set {
+        EdgeSet::Edges1 => c.edges_data(&EDGES1_MASK),
+        EdgeSet::Edges2 => c.edges_data(&EDGES2_MASK),
+    };
 
-    let perm_index = EDGES1_PERMUTATIONS
-        .get(&edges_perm_as_string(&perm))
-        .unwrap();
+    dbg!(edges_perm_as_string(&perm));
+
+    let perm_index = match &set {
+        EdgeSet::Edges1 => EDGES1_PERMUTATIONS
+            .get(&edges_perm_as_string(&perm))
+            .unwrap(),
+        EdgeSet::Edges2 => EDGES2_PERMUTATIONS
+            .get(&edges_perm_as_string(&perm))
+            .unwrap(),
+    };
 
     let orient_index = {
         let mut result = 0 as usize;
@@ -616,6 +655,14 @@ pub fn edges1_index(c: &Cube) -> usize {
     };
 
     (perm_index * 64) + orient_index
+}
+
+pub fn edges1_index(c: &Cube) -> usize {
+    edges_index(c, EdgeSet::Edges1)
+}
+
+pub fn edges2_index(c: &Cube) -> usize {
+    edges_index(c, EdgeSet::Edges2)
 }
 
 #[cfg(test)]
@@ -656,15 +703,8 @@ mod tests {
     fn test_edges_data() {
         let t = transformations::cube3();
         let mut c = Cube::new(3, &t);
-        //c.twist("U F' R2 U2 R B' R2 B R U L2 R2 F' L R2 F L' R F' B2 R B L' R' B");
-        c.twist("D");
+        c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B U2 R' F' L' B2 D' F L2");
 
-        let mut mask = HashSet::new();
-        mask.insert(Edge::RedWhite);
-        mask.insert(Edge::BlueYellow);
-
-        let data = c.edges_data(&mask);
-        println!("{:?}, {:?}", data.0, data.1);
-        println!("{}", crate::cube::edges1_index(&c));
+        println!("{}", crate::cube::edges2_index(&c));
     }
 }

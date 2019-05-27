@@ -11,6 +11,7 @@ use crate::cube::Cube;
 lazy_static! {
     static ref CORNERS_TABLE: Vec<u8> = load_corners_table();
     static ref EDGES1_TABLE: Vec<u8> = load_edges1_table();
+    static ref EDGES2_TABLE: Vec<u8> = load_edges2_table();
 }
 
 fn load_corners_table() -> Vec<u8> {
@@ -23,6 +24,14 @@ fn load_corners_table() -> Vec<u8> {
 
 fn load_edges1_table() -> Vec<u8> {
     let path = Path::new("tables/edges1.data.gz");
+    let file = File::open(&path).unwrap();
+    let d = GzDecoder::new(file);
+
+    bincode::deserialize_from(d).unwrap()
+}
+
+fn load_edges2_table() -> Vec<u8> {
+    let path = Path::new("tables/edges2.data.gz");
     let file = File::open(&path).unwrap();
     let d = GzDecoder::new(file);
 
@@ -127,6 +136,7 @@ pub fn solve_exact<F: Fn(&Cube) -> String>(c: Cube, state_string: F) -> HashMap<
 }
 
 pub fn gen_table<F: Fn(&Cube) -> usize>(c: Cube, result_size: usize, index_fn: F) -> Vec<u8> {
+    let solved_index = index_fn(&c);
     let mut solution_table = vec![0 as u8; result_size];
     let mut queue = VecDeque::new();
     let mut counter = 0 as usize;
@@ -151,7 +161,8 @@ pub fn gen_table<F: Fn(&Cube) -> usize>(c: Cube, result_size: usize, index_fn: F
         }
     }
 
-    solution_table[0] = 0;
+    // reset the index of solved state to 0
+    solution_table[solved_index] = 0;
 
     solution_table
 }
@@ -214,8 +225,37 @@ pub fn solve_edges1(c: &Cube) -> String {
     sol.trim().to_string()
 }
 
+pub fn solve_edges2(c: &Cube) -> String {
+    let mut curr = SearchNodeSmall {
+        state: c.clone(),
+        distance: EDGES2_TABLE[cube::edges2_index(c)],
+    };
+
+    let mut sol = String::new();
+    while EDGES2_TABLE[cube::edges2_index(&curr.state)] != 0 {
+        let neighbors = curr.neighbors();
+        let mut min_distance = 100;
+        let mut next_move = String::new();
+
+        for (neighbor, neighbor_move) in neighbors.into_iter() {
+            let neighbor_distance = EDGES2_TABLE[cube::edges2_index(&neighbor.state)];
+            if neighbor_distance < min_distance {
+                min_distance = neighbor_distance;
+                next_move = neighbor_move;
+                curr = neighbor;
+            }
+        }
+
+        sol.push_str(&next_move);
+        sol.push_str(" ");
+    }
+
+    sol.trim().to_string()
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::cube;
     use crate::cube::Cube;
     use crate::search;
     use crate::transformations;
@@ -242,5 +282,14 @@ mod tests {
         let mut c = Cube::new(3, &t);
         c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B");
         println!("{}", search::solve_edges1(&c));
+    }
+
+    #[test]
+    fn test_solve_edges2() {
+        let t = transformations::cube3();
+        let mut c = Cube::new(3, &t);
+        c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B U2 R' F' L' B2 D' F L2");
+        println!("{}", cube::edges2_index(&c));
+        println!("{}", search::solve_edges2(&c));
     }
 }
