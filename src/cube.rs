@@ -23,6 +23,7 @@ enum Corner {
 }
 
 impl Corner {
+    // fix this with unreachable!
     fn from(v: [u8; 3]) -> Option<Corner> {
         match v {
             [0, 1, 4] => Some(Corner::BlueOrangeWhite),
@@ -69,6 +70,7 @@ enum CornerOrientation {
 }
 
 impl CornerOrientation {
+    // fix this with unreachable!
     fn from(v: [u8; 3]) -> Option<CornerOrientation> {
         match v {
             [0, _, _] | [5, _, _] => Some(CornerOrientation::Up),
@@ -84,6 +86,97 @@ impl CornerOrientation {
             CornerOrientation::Right => 1,
             CornerOrientation::Front => 2,
         }
+    }
+}
+
+enum Edge {
+    BlueOrange,
+    BlueWhite,
+    BlueYellow,
+    BlueRed,
+    OrangeWhite,
+    OrangeYellow,
+    RedWhite,
+    RedYellow,
+    GreenOrange,
+    GreenWhite,
+    GreenYellow,
+    GreenRed,
+}
+
+impl Edge {
+    fn from(v: [u8; 2]) -> Edge {
+        match v {
+            [0, 4] => BlueOrange,
+            [0, 1] => BlueWhite,
+            [0, 3] => BlueYellow,
+            [0, 2] => BlueRed,
+            [1, 4] => OrangeWhite,
+            [3, 4] => OrangeYellow,
+            [1, 2] => RedWhite,
+            [2, 3] => RedYellow,
+            [4, 5] => GreenOrange,
+            [1, 5] => GreenWhite,
+            [3, 5] => GreenYellow,
+            [2, 5] => GreenRed,
+            _ => unreachable!(),
+        }
+    }
+
+    fn index(&self) -> usize {
+        match self {
+            BlueOrange => 0,
+            BlueWhite => 1,
+            BlueYellow => 2,
+            BlueRed => 3,
+            OrangeWhite => 4,
+            OrangeYellow => 5,
+            RedWhite => 6,
+            RedYellow => 7,
+            GreenOrange => 8,
+            GreenWhite => 9,
+            GreenYellow => 10,
+            GreenRed => 11,
+        }
+    }
+}
+
+enum EdgeOrientation {
+    Good,
+    Bad,
+}
+
+impl EdgeOrientation {
+    fn from(v: [u8; 2]) -> EdgeOrientation {
+        match v {
+            [0, 4]
+            | [0, 1]
+            | [0, 3]
+            | [4, 1]
+            | [4, 3]
+            | [2, 1]
+            | [2, 3]
+            | [5, 4]
+            | [5, 1]
+            | [5, 3]
+            | [5, 2] => Good,
+            [4, 0]
+            | [1, 0]
+            | [3, 0]
+            | [1, 4]
+            | [3, 4]
+            | [1, 2]
+            | [3, 2]
+            | [4, 5]
+            | [1, 5]
+            | [3, 5]
+            | [2, 5] => Bad,
+            _ => unreachable!(),
+        }
+    }
+
+    fn index(&self) -> usize {
+        // XXX
     }
 }
 
