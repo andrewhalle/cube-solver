@@ -10,10 +10,19 @@ use crate::cube::Cube;
 
 lazy_static! {
     static ref CORNERS_TABLE: Vec<u8> = load_corners_table();
+    static ref EDGES1_TABLE: Vec<u8> = load_edges1_table();
 }
 
 fn load_corners_table() -> Vec<u8> {
     let path = Path::new("tables/corners.data.gz");
+    let file = File::open(&path).unwrap();
+    let d = GzDecoder::new(file);
+
+    bincode::deserialize_from(d).unwrap()
+}
+
+fn load_edges1_table() -> Vec<u8> {
+    let path = Path::new("tables/edges1.data.gz");
     let file = File::open(&path).unwrap();
     let d = GzDecoder::new(file);
 
@@ -171,7 +180,35 @@ pub fn solve_corners(c: &Cube) -> String {
 
         sol.push_str(&next_move);
         sol.push_str(" ");
-        dbg!(&sol);
+    }
+
+    sol.trim().to_string()
+}
+
+pub fn solve_edges1(c: &Cube) -> String {
+    let mut curr = SearchNodeSmall {
+        state: c.clone(),
+        distance: EDGES1_TABLE[cube::edges1_index(c)],
+    };
+    dbg!();
+
+    let mut sol = String::new();
+    while EDGES1_TABLE[cube::edges1_index(&curr.state)] != 0 {
+        let neighbors = curr.neighbors();
+        let mut min_distance = 100;
+        let mut next_move = String::new();
+
+        for (neighbor, neighbor_move) in neighbors.into_iter() {
+            let neighbor_distance = EDGES1_TABLE[cube::edges1_index(&neighbor.state)];
+            if neighbor_distance < min_distance {
+                min_distance = neighbor_distance;
+                next_move = neighbor_move;
+                curr = neighbor;
+            }
+        }
+
+        sol.push_str(&next_move);
+        sol.push_str(" ");
     }
 
     sol.trim().to_string()
@@ -197,5 +234,13 @@ mod tests {
         let mut c = Cube::new(3, &t);
         c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B");
         println!("{}", search::solve_corners(&c));
+    }
+
+    #[test]
+    fn test_solve_edges1() {
+        let t = transformations::cube3();
+        let mut c = Cube::new(3, &t);
+        c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B");
+        println!("{}", search::solve_edges1(&c));
     }
 }
