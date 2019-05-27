@@ -628,8 +628,6 @@ fn edges_index(c: &Cube, set: EdgeSet) -> usize {
         EdgeSet::Edges2 => c.edges_data(&EDGES2_MASK),
     };
 
-    dbg!(edges_perm_as_string(&perm));
-
     let perm_index = match &set {
         EdgeSet::Edges1 => EDGES1_PERMUTATIONS
             .get(&edges_perm_as_string(&perm))
