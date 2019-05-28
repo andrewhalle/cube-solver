@@ -1,3 +1,4 @@
+use std::cmp;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::File;
 use std::path::Path;
@@ -251,6 +252,49 @@ pub fn solve_edges2(c: &Cube) -> String {
     }
 
     sol.trim().to_string()
+}
+
+enum SearchResult {
+    Found,
+    NewBound(u8),
+}
+
+fn h(c: &Cube) -> u8 {
+    let h1 = CORNERS_TABLE[cube::corners_index(c)];
+    let h2 = EDGES1_TABLE[cube::edges1_index(c)];
+    let h3 = EDGES2_TABLE[cube::edges2_index(c)];
+
+    cmp::max(h1, cmp::max(h2, h3))
+}
+
+pub fn ida_star(root: Cube) -> (Vec<Cube>, u8) {
+    let mut bound = h(&root);
+    let mut path = vec![root];
+    loop {
+        let t = search(&mut path, 0, bound);
+        if let SearchResult::Found = t {
+            return (path, bound);
+        }
+        if let SearchResult::NewBound(b) = t {
+            bound = b;
+        }
+    }
+}
+
+fn search(path: &mut Vec<Cube>, g: u8, bound: u8) -> SearchResult {
+    let node = path.last; // XXX
+    let f = g + h(node);
+    if f > bound {
+        return SearchResult::NewBound(f);
+    } else if f.is_solved() {
+        return SearchResult::Found;
+    }
+
+    let min = infinity; // XXX
+    for succ in node.successors().into_iter() {
+        // XXX
+    }
+    SearchResult::Found
 }
 
 #[cfg(test)]
