@@ -315,7 +315,7 @@ impl EdgeOrientation {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Cube<'a> {
     transformations: &'a HashMap<String, Array2<u8>>,
     data: Array1<u8>,
@@ -371,9 +371,12 @@ impl<'a> Cube<'a> {
     }
 
     pub fn is_solved(&self) -> bool {
-        for face in self.data.to_vec().chunks(4) {
-            if face[0] != face[1] || face[0] != face[2] || face[0] != face[3] {
-                return false;
+        for face in self.data.to_vec().chunks(9) {
+            let color = face[0];
+            for c in face.iter() {
+                if c != &color {
+                    return false;
+                }
             }
         }
 
@@ -515,6 +518,23 @@ impl<'a> Cube<'a> {
         perm.push(Edge::from([c[0], c[1]], &mask));
 
         (perm, orient)
+    }
+
+    pub fn successors(&self) -> Vec<Cube<'a>> {
+        let mut result = Vec::new();
+        let all_moves = vec![
+            "U", "U'", "U2", "F", "F'", "F2", "R", "R'", "R2", "D", "D'", "D2", "B", "B'", "B2",
+            "L", "L'", "L2",
+        ];
+
+        for m in all_moves.into_iter() {
+            let mut c = self.clone();
+            c.twist(m);
+
+            result.push(c);
+        }
+
+        result
     }
 }
 
@@ -704,5 +724,13 @@ mod tests {
         c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B U2 R' F' L' B2 D' F L2");
 
         println!("{}", crate::cube::edges2_index(&c));
+    }
+
+    #[test]
+    fn test_is_solved() {
+        let t = transformations::cube3();
+        let mut c = Cube::new(3, &t);
+        c.twist("U U'");
+        println!("cube is solved: {}", c.is_solved());
     }
 }

@@ -2,6 +2,7 @@ use std::cmp;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs::File;
 use std::path::Path;
+use std::u8;
 
 use flate2::read::GzDecoder;
 use lazy_static::lazy_static;
@@ -270,6 +271,7 @@ fn h(c: &Cube) -> u8 {
 pub fn ida_star(root: Cube) -> (Vec<Cube>, u8) {
     let mut bound = h(&root);
     let mut path = vec![root];
+    dbg!(&path);
     loop {
         let t = search(&mut path, 0, bound);
         if let SearchResult::Found = t {
@@ -282,19 +284,31 @@ pub fn ida_star(root: Cube) -> (Vec<Cube>, u8) {
 }
 
 fn search(path: &mut Vec<Cube>, g: u8, bound: u8) -> SearchResult {
-    let node = path.last; // XXX
+    let node = path.last().unwrap();
     let f = g + h(node);
     if f > bound {
         return SearchResult::NewBound(f);
-    } else if f.is_solved() {
+    } else if node.is_solved() {
         return SearchResult::Found;
     }
 
-    let min = infinity; // XXX
+    let mut min = u8::MAX;
     for succ in node.successors().into_iter() {
-        // XXX
+        if !path.contains(&succ) {
+            path.push(succ);
+            let t = search(path, g + 1, bound);
+            if let SearchResult::Found = t {
+                return t;
+            } else if let SearchResult::NewBound(b) = t {
+                if b < min {
+                    min = b;
+                }
+            }
+            path.pop();
+        }
     }
-    SearchResult::Found
+
+    SearchResult::NewBound(min)
 }
 
 #[cfg(test)]
@@ -335,5 +349,14 @@ mod tests {
         c.twist("B' R D2 U2 R' L U D' F2 D' F2 L F2 L2 B U2 R' F' L' B2 D' F L2");
         println!("{}", cube::edges2_index(&c));
         println!("{}", search::solve_edges2(&c));
+    }
+
+    #[test]
+    fn test_ida() {
+        let t = transformations::cube3();
+        let mut c = Cube::new(3, &t);
+        c.twist("U");
+        let sol = search::ida_star(c);
+        println!("{:?}, {:?}", sol.0, sol.1);
     }
 }
