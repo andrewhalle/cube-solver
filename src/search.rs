@@ -260,6 +260,17 @@ enum SearchResult {
     NewBound(u8),
 }
 
+pub struct IDAStarNode<'a> {
+    pub state: Cube<'a>,
+    pub mv_to_get_here: String,
+}
+
+impl<'a> PartialEq for IDAStarNode<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.state == other.state
+    }
+}
+
 fn h(c: &Cube) -> u8 {
     let h1 = CORNERS_TABLE[cube::corners_index(c)];
     let h2 = EDGES1_TABLE[cube::edges1_index(c)];
@@ -268,14 +279,22 @@ fn h(c: &Cube) -> u8 {
     cmp::max(h1, cmp::max(h2, h3))
 }
 
-pub fn ida_star(root: Cube) -> (Vec<Cube>, u8) {
+pub fn ida_star(root: Cube) -> String {
     let mut bound = h(&root);
-    let mut path = vec![root];
-    dbg!(&path);
+    let mut path = vec![IDAStarNode {
+        state: root,
+        mv_to_get_here: String::new(),
+    }];
     loop {
         let t = search(&mut path, 0, bound);
         if let SearchResult::Found = t {
-            return (path, bound);
+            let mut solution = String::new();
+            for node in path.iter() {
+                solution.push_str(&node.mv_to_get_here);
+                solution.push(' ');
+            }
+            solution.trim();
+            return solution;
         }
         if let SearchResult::NewBound(b) = t {
             bound = b;
@@ -283,17 +302,17 @@ pub fn ida_star(root: Cube) -> (Vec<Cube>, u8) {
     }
 }
 
-fn search(path: &mut Vec<Cube>, g: u8, bound: u8) -> SearchResult {
+fn search<'a>(path: &mut Vec<IDAStarNode<'a>>, g: u8, bound: u8) -> SearchResult {
     let node = path.last().unwrap();
-    let f = g + h(node);
+    let f = g + h(&node.state);
     if f > bound {
         return SearchResult::NewBound(f);
-    } else if node.is_solved() {
+    } else if node.state.is_solved() {
         return SearchResult::Found;
     }
 
     let mut min = u8::MAX;
-    for succ in node.successors().into_iter() {
+    for succ in node.state.successors().into_iter() {
         if !path.contains(&succ) {
             path.push(succ);
             let t = search(path, g + 1, bound);
@@ -355,8 +374,8 @@ mod tests {
     fn test_ida() {
         let t = transformations::cube3();
         let mut c = Cube::new(3, &t);
-        c.twist("U");
+        c.twist("B' R U L B U2 B' U' B' L B' F' U D B2 F'");
         let sol = search::ida_star(c);
-        println!("{:?}, {:?}", sol.0, sol.1);
+        println!("{}", sol);
     }
 }

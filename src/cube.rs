@@ -6,6 +6,8 @@ use std::path::Path;
 use lazy_static::lazy_static;
 use ndarray::{Array1, Array2};
 
+use crate::search::IDAStarNode;
+
 lazy_static! {
     static ref CORNER_PERMUTATIONS: HashMap<String, usize> = all_corner_permutations();
     static ref EDGES1_PERMUTATIONS: HashMap<String, usize> = all_edges1_permutations();
@@ -520,7 +522,7 @@ impl<'a> Cube<'a> {
         (perm, orient)
     }
 
-    pub fn successors(&self) -> Vec<Cube<'a>> {
+    pub fn successors(&self) -> Vec<IDAStarNode<'a>> {
         let mut result = Vec::new();
         let all_moves = vec![
             "U", "U'", "U2", "F", "F'", "F2", "R", "R'", "R2", "D", "D'", "D2", "B", "B'", "B2",
@@ -531,7 +533,10 @@ impl<'a> Cube<'a> {
             let mut c = self.clone();
             c.twist(m);
 
-            result.push(c);
+            result.push(IDAStarNode {
+                state: c,
+                mv_to_get_here: m.to_string(),
+            });
         }
 
         result
